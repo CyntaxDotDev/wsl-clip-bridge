@@ -1,10 +1,18 @@
 # wsl-clip-bridge
 
+[![CI](https://github.com/CyntaxDotDev/wsl-clip-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/CyntaxDotDev/wsl-clip-bridge/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Paste images from the Windows clipboard into [Claude Code](https://github.com/anthropics/claude-code)
 (or any other Linux app reading the Wayland clipboard) when it's running
 inside WSL launched from Windows Terminal.
 
-**Blog post:** [Why Ctrl+V won't paste images in Claude Code on WSL, with a fix](https://rajveerb.com/blog/2026/05/24/on-the-difficulty-of-pasting-a-picture/)
+> **Cyntax-maintained fork** of [`rajveerb/wsl-clip-bridge`](https://github.com/rajveerb/wsl-clip-bridge).
+> All credit for the original design goes to Rajveer Bachkaniwala — see
+> [Credits](#credits). This fork hardens packaging (forced LF line endings,
+> CI build, corrected Go version requirement) for a clean WSL install.
+
+**Blog post (original author):** [Why Ctrl+V won't paste images in Claude Code on WSL, with a fix](https://rajveerb.com/blog/2026/05/24/on-the-difficulty-of-pasting-a-picture/)
 
 ## Why this exists
 
@@ -30,7 +38,7 @@ keybinding sidesteps the Windows Terminal Ctrl+V intercept.
 ## Quick start
 
 ```bash
-git clone https://github.com/rajveerb/wsl-clip-bridge.git
+git clone https://github.com/CyntaxDotDev/wsl-clip-bridge.git
 cd wsl-clip-bridge
 sudo apt install wl-clipboard
 ./install.sh --with-autostart --with-keybinding
@@ -50,10 +58,11 @@ instead of via `install.sh`), here is the full procedure.
 
 - **WSL2 with WSLg.** Windows 11 ships with this; on Windows 10 you need
   a recent WSL update (`wsl --update`).
-- **Go 1.20+ on the Linux side** (for cross-compiling the Windows
-  binary). If you don't have it: download from
+- **Go 1.26+ on the Linux side** (required by `go.mod`; used to
+  cross-compile the Windows binary). If you don't have it: download from
   [go.dev/dl](https://go.dev/dl/) — no sudo needed if you extract into
-  `~/.local/go`.
+  `~/.local/go`. `install.sh` auto-detects `~/.local/go/bin/go`, a `go`
+  on `PATH`, or an explicit `GO_BIN=/path/to/go`.
 - **`wl-clipboard`:**
   ```bash
   sudo apt install wl-clipboard
@@ -213,3 +222,24 @@ rm -rf ~/.local/share/wsl-clip-bridge ~/.local/bin/wsl-clip-bridge
 ```
 
 Nothing in the rest of your environment depends on this.
+
+## Credits
+
+This project is a fork of
+[`rajveerb/wsl-clip-bridge`](https://github.com/rajveerb/wsl-clip-bridge)
+by **Rajveer Bachkaniwala**, who designed and built the original
+event-driven listener, the WSLg round-trip dedup, and the bash bridge —
+the hard parts. See the original
+[blog post](https://rajveerb.com/blog/2026/05/24/on-the-difficulty-of-pasting-a-picture/)
+for the full backstory.
+
+This Cyntax fork adds packaging hardening on top of that work:
+
+- `.gitattributes` forcing LF endings so the scripts survive a clone with
+  `core.autocrlf=true` (the `#!/usr/bin/env bash\r` failure on WSL).
+- GitHub Actions CI that cross-compiles `clip-listener.exe` and lints the
+  shell scripts on every push.
+- Corrected the documented Go requirement to match `go.mod` (1.26+).
+
+Licensed under the [MIT License](LICENSE); the original copyright is
+retained alongside the fork's.

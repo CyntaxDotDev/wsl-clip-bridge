@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build clip-listener.exe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: windows/clip-listener/go.mod
+          cache: false  # stdlib-only module, no go.sum to key a cache on
+
+      - name: go vet (windows target)
+        working-directory: windows/clip-listener
+        env:
+          GOOS: windows
+          GOARCH: amd64
+        run: go vet ./...  # main.go uses Windows-only syscalls; vet must target windows
+
+      - name: Cross-compile for Windows
+        working-directory: windows/clip-listener
+        env:
+          GOOS: windows
+          GOARCH: amd64
+        run: go build -trimpath -ldflags="-s -w" -o clip-listener.exe .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: clip-listener
+          path: windows/clip-listener/clip-listener.exe
+          if-no-files-found: error
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint shell scripts
+        uses: ludeeus/action-shellcheck@master
+        with:
+          severity: error
+          additional_files: wsl/wsl-clip-bridge

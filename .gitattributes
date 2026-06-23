@@ -1,0 +1,12 @@
+# Normalize all text files to LF in the working tree, regardless of the
+# cloner's core.autocrlf. CRLF breaks the `#!/usr/bin/env bash` shebang
+# under WSL/Linux (env looks for a program literally named "bash\r").
+* text=auto eol=lf
+
+# Explicit: shell entrypoints must always be LF.
+*.sh                text eol=lf
+wsl/wsl-clip-bridge text eol=lf
+
+# Never touch binaries.
+*.exe binary
+*.png binary
